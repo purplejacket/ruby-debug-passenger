@@ -1,0 +1,27 @@
+require "ruby-debug-passenger/version"
+require "rails"
+
+module RubyDebugPassenger
+  class Railtie < Rails::Railtie
+
+    # Initializer
+    initializer "ruby-debug-passenger" do
+      # When Passenger starts the app, this checks if debug.txt exists, and if
+      # so it waits for the debugger to connect before continuing. It will only
+      # ever run in the development environment (for safety more than anything
+      # else).
+      if Rails.env.development? && File.exists?(File.join(Rails.root, 'tmp', 'debug.txt'))
+        require 'ruby-debug'
+        File.delete(File.join(Rails.root, 'tmp', 'debug.txt'))
+        Debugger.wait_connection = true
+        Debugger.start_remote
+      end
+    end
+
+    # Rake task
+    rake_tasks do
+      load "tasks/debug.rake"
+    end
+
+  end
+end
